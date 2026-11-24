@@ -1,60 +1,185 @@
-import { photos } from "../data/site"
+import { useMemo, useState, type ChangeEvent } from "react"
 import { motion, useReducedMotion } from "motion/react"
+import { useCart } from "../cart/CartContext"
+import {
+  catalog,
+  familyName,
+  gramsFor,
+  productById,
+  wastageRate,
+  weightOptions,
+} from "../data/catalog"
 import { AppLink } from "../components/AppLink"
 import { Icon } from "../components/Icon"
 import { MaskedImg } from "../components/MaskedImg"
 import { revealProps } from "../components/motion"
 import { Page } from "../components/Page"
+import { Studio3D } from "../components/Studio3D"
 
-export function ProductPage() {
+export function ProductPage({ slug }: { slug?: string }) {
+  const product = productById(slug)
   const reduce = useReducedMotion()
+  const { addLine, totalPcs, lines } = useCart()
+  const chips = weightOptions(product)
+  const [weight, setWeight] = useState(chips[Math.floor(chips.length / 2)])
+  const [pcs, setPcs] = useState(product.moq)
+  const [uploadName, setUploadName] = useState<string>()
+  const projectedPcs = totalPcs + pcs
+  const rate = wastageRate(product.wastage, projectedPcs)
+  const grams = gramsFor(weight, pcs, rate)
+  const related = catalog.filter(
+    (item) => item.family === product.family && item.id !== product.id,
+  ).slice(0, 3)
+
+  const hint = useMemo(() => {
+    if (projectedPcs >= 200) return "200+ pcs on this order — wastage at the floor."
+    if (projectedPcs >= 50) return "50+ pcs — wastage eases by 1%."
+    return "Wastage is fixed on this design until the order grows."
+  }, [projectedPcs])
+
+  function onFile(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    setUploadName(file?.name)
+  }
+
+  function add() {
+    addLine({
+      productId: product.id,
+      weight,
+      pcs,
+      uploadName,
+    })
+  }
 
   return (
-    <Page className="product-page">
-      <section className="gallery">
-        <MaskedImg src={photos.ring} alt="Sculpted statement ring" />
-        <MaskedImg
-          src={photos.detail}
-          alt="Ring detail on hand"
-          loading="lazy"
-          decoding="async"
-        />
+    <Page>
+      <section className="product-page">
+        <section className="gallery product-gallery">
+          <Studio3D src={product.image} alt={`${product.name} 3D studio view`} />
+          <MaskedImg src={product.detail} alt={`${product.name} detail`} />
+        </section>
+        <aside className="product-info">
+          <motion.p className="eyebrow" {...revealProps(reduce)}>
+            {familyName(product.family)} · {product.code}
+          </motion.p>
+          <motion.h1 {...revealProps(reduce, 0.05)}>{product.name}</motion.h1>
+          <motion.p className="note" {...revealProps(reduce, 0.1)}>
+            {product.note}
+          </motion.p>
+
+          <div className="config">
+            <div className="config-head">
+              <p className="eyebrow">Weight range</p>
+              <strong>{weight.toFixed(1)} g</strong>
+            </div>
+            <input
+              type="range"
+              min={product.weightMin}
+              max={product.weightMax}
+              step={product.weightStep}
+              value={weight}
+              onChange={(event) => setWeight(Number(event.target.value))}
+              aria-label="Design weight"
+            />
+            <div className="weight-chips">
+              {chips.map((value) => (
+                <button
+                  type="button"
+                  key={value}
+                  className={weight === value ? "selected" : ""}
+                  onClick={() => setWeight(value)}
+                >
+                  {value.toFixed(1)} g
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="config">
+            <div className="config-head">
+              <p className="eyebrow">Pieces · MOQ {product.moq}</p>
+            </div>
+            <div className="qty">
+              <button
+                type="button"
+                aria-label="Decrease pieces"
+                onClick={() => setPcs((value) => Math.max(product.moq, value - 1))}
+              >
+                <Icon name="minus" />
+              </button>
+              <input
+                type="number"
+                min={product.moq}
+                value={pcs}
+                onChange={(event) =>
+                  setPcs(Math.max(product.moq, Number(event.target.value) || product.moq))
+                }
+              />
+              <button
+                type="button"
+                aria-label="Increase pieces"
+                onClick={() => setPcs((value) => value + 1)}
+              >
+                <Icon name="plus" />
+              </button>
+            </div>
+          </div>
+
+          <div className="spec order-spec">
+            <div>
+              <span>Net gold</span>
+              <b>{grams.net.toFixed(2)} g</b>
+            </div>
+            <div>
+              <span>Wastage {rate}%</span>
+              <b>{grams.wastage.toFixed(2)} g</b>
+            </div>
+            <div>
+              <span>Billable gold</span>
+              <b>{grams.billable.toFixed(2)} g</b>
+            </div>
+          </div>
+          <p className="small-note">{hint} Floor is 6%. Gold rate is confirmed on the order.</p>
+
+          <label className="upload">
+            <Icon name="upload" />
+            <span>
+              {uploadName ? uploadName : "Upload a reference photo"}
+              <small>Optional · match a sample or a similar design</small>
+            </span>
+            <input type="file" accept="image/*" onChange={onFile} />
+          </label>
+
+          <div className="product-actions">
+            <button type="button" className="button dark-button" onClick={add}>
+              Add to cart <Icon name="bag" />
+            </button>
+            {lines.length > 0 && (
+              <AppLink page="cart" className="text-link">
+                View cart <Icon name="arrow" />
+              </AppLink>
+            )}
+          </div>
+        </aside>
       </section>
-      <aside className="product-info">
-        <motion.p className="eyebrow" {...revealProps(reduce)}>
-          Rings · DO–R / 001
-        </motion.p>
-        <motion.h1 {...revealProps(reduce, 0.05)}>
-          Sculpted
-          <br />
-          Statement Ring
-        </motion.h1>
-        <motion.p className="note" {...revealProps(reduce, 0.1)}>
-          An expressive study in line, volume and light. Shown as an editorial
-          reference; final specifications and available variants are confirmed
-          on enquiry.
-        </motion.p>
-        <motion.div className="spec" {...revealProps(reduce, 0.14)}>
-          <div>
-            <span>Product code</span>
-            <b>DO–R / 001</b>
+      {related.length > 0 && (
+        <section className="related wrap">
+          <p className="eyebrow">Same family</p>
+          <div className="related-row">
+            {related.map((item) => (
+              <AppLink key={item.id} page="product" slug={item.id} className="related-chip">
+                <img src={item.image} alt="" />
+                <span>
+                  {item.name}
+                  <small>
+                    {item.weightMin}–{item.weightMax} g
+                  </small>
+                </span>
+              </AppLink>
+            ))}
           </div>
-          <div>
-            <span>Available variants</span>
-            <b>Confirm on enquiry</b>
-          </div>
-          <div>
-            <span>Specifications</span>
-            <b>Provided with current catalogue</b>
-          </div>
-        </motion.div>
-        <AppLink page="contact" className="button dark-button" {...revealProps(reduce, 0.18)}>
-          Enquire about this piece <Icon name="arrow" />
-        </AppLink>
-        <motion.p className="small-note" {...revealProps(reduce, 0.22)}>
-          For wholesale, collection and product availability enquiries.
-        </motion.p>
-      </aside>
+        </section>
+      )}
     </Page>
   )
 }

@@ -1,52 +1,116 @@
-import { useState } from "react"
+import { useMemo, useState } from "react"
 import { motion, useReducedMotion } from "motion/react"
-import { products } from "../data/site"
+import {
+  catalog,
+  coversWeight,
+  families,
+  type FamilyId,
+} from "../data/catalog"
 import { Page } from "../components/Page"
 import { ProductCard } from "../components/ProductCard"
 import { revealProps } from "../components/motion"
 
-const filters = ["All", "Rings", "Necklaces", "Earrings", "Bracelets"] as const
-
-export function Collections() {
-  const [filter, setFilter] = useState<(typeof filters)[number]>("All")
+export function Collections({ familySlug }: { familySlug?: string }) {
+  const initial =
+    families.some((family) => family.id === familySlug) ? (familySlug as FamilyId) : "all"
+  const [family, setFamily] = useState<FamilyId | "all">(initial)
+  const [mode, setMode] = useState<"design" | "weight">("design")
+  const [grams, setGrams] = useState(2.4)
   const reduce = useReducedMotion()
-  const visible = products.filter(
-    (item) => filter === "All" || item.category === filter,
-  )
+
+  const visible = useMemo(() => {
+    return catalog.filter((item) => {
+      const familyOk = family === "all" || item.family === family
+      const weightOk = mode === "design" || coversWeight(item, grams)
+      return familyOk && weightOk
+    })
+  }, [family, grams, mode])
 
   return (
     <Page className="page-main">
       <section className="catalog-hero">
         <motion.p className="eyebrow" {...revealProps(reduce)}>
-          Dazzle catalogue
+          Wholesale catalogue
         </motion.p>
         <motion.h1 {...revealProps(reduce, 0.05)}>
-          Forms of <em>expression.</em>
+          Order by design,
+          <br />
+          or by <em>weight.</em>
         </motion.h1>
         <motion.p {...revealProps(reduce, 0.1)}>
-          Explore a curated view of the Dazzle collection. Product imagery shown
-          is editorial and can be replaced with the current catalogue.
+          Choose a family, set the gram window, then add pieces to cart. Wastage
+          is applied at a fixed rate and eases on larger orders, never below the
+          floor.
         </motion.p>
       </section>
       <section className="catalog wrap">
+        <div className="browse-switch" role="tablist" aria-label="Browse mode">
+          <button
+            type="button"
+            className={mode === "design" ? "selected" : ""}
+            onClick={() => setMode("design")}
+          >
+            Design-wise weight
+          </button>
+          <button
+            type="button"
+            className={mode === "weight" ? "selected" : ""}
+            onClick={() => setMode("weight")}
+          >
+            Weight-wise design
+          </button>
+        </div>
+        {mode === "weight" && (
+          <div className="weight-seek">
+            <div>
+              <p className="eyebrow">Target weight</p>
+              <strong>{grams.toFixed(1)} g</strong>
+            </div>
+            <input
+              type="range"
+              min={0.6}
+              max={14}
+              step={0.1}
+              value={grams}
+              onChange={(event) => setGrams(Number(event.target.value))}
+              aria-label="Target weight in grams"
+            />
+            <span>Designs whose range includes this gram.</span>
+          </div>
+        )}
         <motion.div className="filters" {...revealProps(reduce)}>
-          {filters.map((label) => (
+          <button
+            type="button"
+            className={family === "all" ? "selected" : ""}
+            onClick={() => setFamily("all")}
+          >
+            All
+          </button>
+          {families.map((item) => (
             <button
               type="button"
-              className={filter === label ? "selected" : ""}
-              onClick={() => setFilter(label)}
-              key={label}
+              className={family === item.id ? "selected" : ""}
+              onClick={() => setFamily(item.id)}
+              key={item.id}
             >
-              {label}
+              {item.name}
             </button>
           ))}
-          <span>{visible.length} pieces</span>
+          <span>{visible.length} designs</span>
         </motion.div>
-        <div className="product-grid catalog-grid">
-          {visible.map((item, index) => (
-            <ProductCard key={item.code} item={item} index={index} />
-          ))}
-        </div>
+        {visible.length ? (
+          <div className="product-grid catalog-grid">
+            {visible.map((item, index) => (
+              <ProductCard key={item.id} item={item} index={index} />
+            ))}
+          </div>
+        ) : (
+          <div className="empty">
+            <span>DO</span>
+            <h2>No designs in this window.</h2>
+            <p>Ease the target weight, or switch back to design-wise browsing.</p>
+          </div>
+        )}
       </section>
     </Page>
   )

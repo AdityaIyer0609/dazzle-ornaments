@@ -1,7 +1,7 @@
 import { useRef } from "react"
 import { motion, useInView, useReducedMotion, useScroll, useTransform } from "motion/react"
 import { photos } from "../data/site"
-import { products } from "../data/site"
+import { catalog } from "../data/catalog"
 import { AppLink } from "../components/AppLink"
 import { Enquiry } from "../components/Enquiry"
 import { Icon } from "../components/Icon"
@@ -54,7 +54,7 @@ export function Home() {
             className="button light-button"
             {...detailProps(reduce, 1.15)}
           >
-            Discover the collection <Icon name="arrow" />
+            Open the catalogue <Icon name="arrow" />
           </AppLink>
         </div>
         <motion.p className="hero-index" {...detailProps(reduce, 1.3)}>
@@ -98,30 +98,33 @@ export function Home() {
             <h2>The collection</h2>
           </div>
           <AppLink page="collections" className="text-link">
-            View all pieces <Icon name="arrow" />
+            View all designs <Icon name="arrow" />
           </AppLink>
         </motion.div>
         <div className="collection-grid">
           <CollectionTile
             className="collection-tile tall"
             src={photos.detail}
-            alt="Rings collection"
+            alt="Tops collection"
             index="01"
-            label="Rings"
+            label="Tops"
+            slug="tops"
           />
           <CollectionTile
             className="collection-tile"
             src={photos.editorial}
-            alt="Necklaces collection"
+            alt="Bali collection"
             index="02"
-            label="Necklaces"
+            label="Bali"
+            slug="bali"
           />
           <CollectionTile
             className="collection-tile"
             src={photos.ring}
-            alt="Earrings collection"
+            alt="Rings collection"
             index="03"
-            label="Earrings"
+            label="Rings"
+            slug="rings"
           />
         </div>
       </section>
@@ -135,8 +138,8 @@ export function Home() {
           <p>A considered selection of forms from the Dazzle studio.</p>
         </motion.div>
         <div className="product-grid">
-          {products.slice(0, 3).map((item, index) => (
-            <ProductCard key={item.code} item={item} index={index} />
+          {catalog.slice(0, 3).map((item, index) => (
+            <ProductCard key={item.id} item={item} index={index} />
           ))}
         </div>
       </section>
@@ -216,7 +219,7 @@ export function Home() {
             index={2}
             number="03"
             title="Business partnership"
-            copy="A considered approach to wholesale and collection enquiries."
+            copy="Weight, MOQ and wastage on one order sheet — cart first, then place."
           />
         </div>
       </section>
@@ -231,12 +234,14 @@ function CollectionTile({
   alt,
   index,
   label,
+  slug,
 }: {
   className: string
   src: string
   alt: string
   index: string
   label: string
+  slug: string
 }) {
   const ref = useRef<HTMLButtonElement>(null)
   const reduce = useReducedMotion()
@@ -244,7 +249,7 @@ function CollectionTile({
   const shown = Boolean(reduce || inView)
 
   return (
-    <AppLink ref={ref} page="collections" className={className}>
+    <AppLink ref={ref} page="collections" slug={slug} className={className}>
       <motion.img
         src={src}
         alt={alt}

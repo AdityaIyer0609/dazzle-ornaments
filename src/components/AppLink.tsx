@@ -1,9 +1,10 @@
 import { forwardRef, type ReactNode } from "react"
 import { motion, type HTMLMotionProps } from "motion/react"
-import type { Page } from "../data/site"
+import { hashFor, type Page } from "../data/site"
 
 type AppLinkProps = {
   page: Page
+  slug?: string
   children: ReactNode
   className?: string
   onNavigate?: () => void
@@ -11,7 +12,7 @@ type AppLinkProps = {
 
 export const AppLink = forwardRef<HTMLButtonElement, AppLinkProps>(
   function AppLink(
-    { page, children, className, onNavigate, ...motionProps },
+    { page, slug, children, className, onNavigate, ...motionProps },
     ref,
   ) {
     return (
@@ -20,7 +21,7 @@ export const AppLink = forwardRef<HTMLButtonElement, AppLinkProps>(
         type="button"
         className={className}
         onClick={() => {
-          window.location.hash = page
+          window.location.hash = hashFor(page, slug)
           onNavigate?.()
         }}
         {...motionProps}

@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react"
-import { readPage, type Page } from "./data/site"
+import { readRoute, type Route } from "./data/site"
+import { CartProvider } from "./cart/CartContext"
 import { Enquiry } from "./components/Enquiry"
 import { Footer } from "./components/Footer"
 import { Header } from "./components/Header"
 import { Page as PageShell } from "./components/Page"
+import { CartPage } from "./pages/CartPage"
 import { Collections } from "./pages/Collections"
 import { Home } from "./pages/Home"
 import { ProductPage } from "./pages/ProductPage"
@@ -11,11 +13,19 @@ import { SearchPage } from "./pages/SearchPage"
 import { StoryPage } from "./pages/StoryPage"
 
 export default function App() {
-  const [page, setPage] = useState<Page>(() => readPage(window.location.hash))
+  return (
+    <CartProvider>
+      <AppShell />
+    </CartProvider>
+  )
+}
+
+function AppShell() {
+  const [route, setRoute] = useState<Route>(() => readRoute())
 
   useEffect(() => {
     const onHashChange = () => {
-      setPage(readPage(window.location.hash))
+      setRoute(readRoute())
       window.scrollTo(0, 0)
     }
     window.addEventListener("hashchange", onHashChange)
@@ -36,19 +46,21 @@ export default function App() {
 
   return (
     <>
-      <Header page={page} />
-      <PageView key={page} page={page} />
+      <Header page={route.page} />
+      <PageView key={`${route.page}/${route.slug ?? ""}`} route={route} />
       <Footer />
     </>
   )
 }
 
-function PageView({ page }: { page: Page }) {
-  switch (page) {
+function PageView({ route }: { route: Route }) {
+  switch (route.page) {
     case "collections":
-      return <Collections />
+      return <Collections familySlug={route.slug} />
     case "product":
-      return <ProductPage />
+      return <ProductPage slug={route.slug} />
+    case "cart":
+      return <CartPage />
     case "about":
       return <StoryPage />
     case "craft":

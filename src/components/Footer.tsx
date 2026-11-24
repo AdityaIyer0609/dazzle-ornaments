@@ -14,7 +14,8 @@ export function Footer() {
         </div>
         <div>
           <p>Explore</p>
-          <AppLink page="collections">Collections</AppLink>
+          <AppLink page="collections">Catalogue</AppLink>
+          <AppLink page="cart">Cart</AppLink>
           <AppLink page="craft">Craftsmanship</AppLink>
           <AppLink page="about">Our House</AppLink>
         </div>

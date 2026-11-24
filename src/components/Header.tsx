@@ -1,16 +1,18 @@
 import { useState } from "react"
 import { nav } from "../data/site"
 import type { Page } from "../data/site"
+import { useCart } from "../cart/CartContext"
 import { AppLink } from "./AppLink"
 import { Icon } from "./Icon"
 
 export function Header({ page }: { page: Page }) {
   const [open, setOpen] = useState(false)
+  const { count, toast } = useCart()
 
   return (
     <>
       <div className="announcement">
-        Private collection consultations available · Rajkot, India
+        Wholesale desk · design-wise weight, MOQ and wastage · Rajkot
       </div>
       <header className="header">
         <button
@@ -39,8 +41,9 @@ export function Header({ page }: { page: Page }) {
           <AppLink page="search" aria-label="Search">
             <Icon name="search" />
           </AppLink>
-          <AppLink page="contact" className="header-enquire">
-            Enquire
+          <AppLink page="cart" className="cart-link" aria-label="Cart">
+            <Icon name="bag" />
+            {count > 0 && <b>{count}</b>}
           </AppLink>
         </div>
       </header>
@@ -65,9 +68,14 @@ export function Header({ page }: { page: Page }) {
               {label}
             </AppLink>
           ))}
+          <AppLink page="cart" onNavigate={() => setOpen(false)}>
+            <span>05</span>
+            Cart
+          </AppLink>
         </div>
         <p>Rajkot · Gujarat · India</p>
       </div>
+      {toast && <div className="cart-toast">{toast}</div>}
     </>
   )
 }

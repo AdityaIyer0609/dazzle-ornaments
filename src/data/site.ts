@@ -1,10 +1,10 @@
 export const photos = {
-  hero: "/images/hero.jpg",
-  portrait: "/images/portrait.jpg",
-  ring: "/images/ring.jpg",
-  mood: "/images/mood.jpg",
-  detail: "/images/detail.jpg",
-  editorial: "/images/editorial.jpg",
+  hero: "/images/hero.svg",
+  portrait: "/images/portrait.svg",
+  ring: "/images/ring.svg",
+  mood: "/images/mood.svg",
+  detail: "/images/detail.svg",
+  editorial: "/images/editorial.svg",
 } as const
 
 export const pages = [
@@ -15,52 +15,34 @@ export const pages = [
   "craft",
   "contact",
   "search",
+  "cart",
 ] as const
 
 export type Page = (typeof pages)[number]
 
-export type Product = {
-  name: string
-  code: string
-  image: string
-  category: "Rings" | "Necklaces" | "Earrings" | "Bracelets"
+export type Route = {
+  page: Page
+  slug?: string
 }
 
-export const products: Product[] = [
-  {
-    name: "Sculpted Statement Ring",
-    code: "DO–R / 001",
-    image: photos.ring,
-    category: "Rings",
-  },
-  {
-    name: "Fine Line Necklace",
-    code: "DO–N / 014",
-    image: photos.portrait,
-    category: "Necklaces",
-  },
-  {
-    name: "Contour Drop Earrings",
-    code: "DO–E / 008",
-    image: photos.detail,
-    category: "Earrings",
-  },
-  {
-    name: "Modern Heirloom Bracelet",
-    code: "DO–B / 021",
-    image: photos.editorial,
-    category: "Bracelets",
-  },
-]
-
 export const nav = [
-  ["collections", "Collections"],
+  ["collections", "Catalogue"],
   ["about", "Our House"],
   ["craft", "Craftsmanship"],
   ["contact", "Business Enquiries"],
 ] as const
 
-export function readPage(hash: string): Page {
+export function readRoute(hash = window.location.hash): Route {
   const value = hash.replace(/^#/, "")
-  return pages.includes(value as Page) ? (value as Page) : "home"
+  const [head, ...rest] = value.split("/")
+  const slug = rest.join("/") || undefined
+  if (head === "product") return { page: "product", slug }
+  if (head === "collections") return { page: "collections", slug }
+  if (pages.includes(head as Page)) return { page: head as Page }
+  return { page: "home" }
+}
+
+export function hashFor(page: Page, slug?: string) {
+  if (slug) return `${page}/${slug}`
+  return page
 }
