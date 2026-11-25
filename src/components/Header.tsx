@@ -41,9 +41,14 @@ export function Header({ page }: { page: Page }) {
           <AppLink page="search" aria-label="Search">
             <Icon name="search" />
           </AppLink>
-          <AppLink page="cart" className="cart-link" aria-label="Cart">
+          <AppLink
+            page="cart"
+            className={`cart-link ${count > 0 ? "has-items" : ""} ${page === "cart" ? "active" : ""}`}
+            aria-label={`Cart, ${count} designs`}
+          >
             <Icon name="bag" />
-            {count > 0 && <b>{count}</b>}
+            <span>Cart</span>
+            <b>{count}</b>
           </AppLink>
         </div>
       </header>
@@ -68,14 +73,14 @@ export function Header({ page }: { page: Page }) {
               {label}
             </AppLink>
           ))}
-          <AppLink page="cart" onNavigate={() => setOpen(false)}>
-            <span>05</span>
-            Cart
-          </AppLink>
         </div>
         <p>Rajkot · Gujarat · India</p>
       </div>
-      {toast && <div className="cart-toast">{toast}</div>}
+      {toast && (
+        <AppLink page="cart" className="cart-toast">
+          {toast} · Open cart <Icon name="arrow" />
+        </AppLink>
+      )}
     </>
   )
 }

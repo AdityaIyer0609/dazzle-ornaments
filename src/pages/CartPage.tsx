@@ -95,13 +95,9 @@ export function CartPage() {
     <Page className="page-main cart-page">
       <section className="cart-hero wrap">
         <motion.p className="eyebrow" {...revealProps(reduce)}>
-          Cart · {lines.length} designs
+          Cart · {lines.length} {lines.length === 1 ? "design" : "designs"}
         </motion.p>
-        <motion.h1 {...revealProps(reduce, 0.05)}>
-          Review, then
-          <br />
-          <em>place the order.</em>
-        </motion.h1>
+        <motion.h1 {...revealProps(reduce, 0.05)}>Your order</motion.h1>
       </section>
       <section className="cart-layout wrap">
         <div className="cart-lines">
@@ -113,7 +109,7 @@ export function CartPage() {
                 <AppLink page="product" slug={product.id} className="cart-thumb">
                   <img src={product.image} alt={product.name} />
                 </AppLink>
-                <div>
+                <div className="cart-line-copy">
                   <p>
                     {product.code} · {line.weight.toFixed(1)} g
                   </p>
@@ -138,9 +134,10 @@ export function CartPage() {
                   </div>
                 </div>
                 <div className="cart-math">
-                  <span>Net {net.toFixed(2)} g</span>
-                  <span>Wastage {rate}% · {wastage.toFixed(2)} g</span>
                   <b>{billable.toFixed(2)} g</b>
+                  <span>
+                    Net {net.toFixed(2)} · wastage {rate}% ({wastage.toFixed(2)} g)
+                  </span>
                   <button type="button" onClick={() => removeLine(line.key)}>
                     Remove
                   </button>
@@ -150,39 +147,20 @@ export function CartPage() {
           })}
         </div>
         <aside className="cart-summary">
-          <p className="eyebrow">Order sheet</p>
-          <h2>Billable gold</h2>
-          <p className="cart-total">{totalBillable.toFixed(2)} g</p>
-          <div className="spec">
-            <div>
-              <span>Total pieces</span>
-              <b>{totalPcs} pcs</b>
-            </div>
-            <div>
-              <span>Wastage now</span>
-              <b>{wastageRate(8, totalPcs)}%</b>
-            </div>
-            <div>
-              <span>Gold rate</span>
-              <b>On confirmation</b>
-            </div>
-          </div>
-          <div className="slab-track">
-            {WASTAGE_SLABS.map((slab) => (
-              <span
-                key={slab.minPcs}
-                className={totalPcs >= slab.minPcs ? "on" : ""}
-              >
-                {slab.label}
-              </span>
-            ))}
-          </div>
-          {nextSlab && (
-            <p className="small-note">
-              Add {nextSlab.minPcs - totalPcs} more pcs to reach {nextSlab.label.toLowerCase()}{" "}
-              wastage.
+          <div className="cart-summary-top">
+            <p className="eyebrow">Checkout</p>
+            <p className="cart-total">{totalBillable.toFixed(2)} g</p>
+            <p className="cart-summary-meta">
+              {totalPcs} pcs · wastage {wastageRate(8, totalPcs)}% · gold rate on
+              confirmation
             </p>
-          )}
+            {nextSlab && (
+              <p className="small-note">
+                Add {nextSlab.minPcs - totalPcs} pcs for {nextSlab.label.toLowerCase()}{" "}
+                wastage.
+              </p>
+            )}
+          </div>
           <form className="cart-form" onSubmit={submit}>
             <label>
               Name
@@ -204,13 +182,13 @@ export function CartPage() {
             </div>
             <label>
               Note
-              <textarea name="note" rows={3} placeholder="Finish, size, delivery window" />
+              <textarea name="note" rows={2} placeholder="Finish, size, delivery window" />
             </label>
             <label className="upload">
               <Icon name="upload" />
               <span>
-                {orderUploadName ?? "Upload for the whole order"}
-                <small>Optional reference for the desk</small>
+                {orderUploadName ?? "Upload a reference"}
+                <small>Optional</small>
               </span>
               <input type="file" accept="image/*" onChange={onFile} />
             </label>

@@ -26,6 +26,7 @@ export type Route = {
 }
 
 export const nav = [
+  ["home", "Home"],
   ["collections", "Catalogue"],
   ["about", "Our House"],
   ["craft", "Craftsmanship"],
