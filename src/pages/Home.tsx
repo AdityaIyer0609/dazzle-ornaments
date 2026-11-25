@@ -104,7 +104,7 @@ export function Home() {
         <div className="collection-grid">
           <CollectionTile
             className="collection-tile tall"
-            src={photos.detail}
+            src="/images/catalog/i1.jpg"
             alt="Tops collection"
             index="01"
             label="Tops"
@@ -112,7 +112,7 @@ export function Home() {
           />
           <CollectionTile
             className="collection-tile"
-            src={photos.editorial}
+            src="/images/catalog/i10.jpg"
             alt="Bali collection"
             index="02"
             label="Bali"
@@ -120,7 +120,7 @@ export function Home() {
           />
           <CollectionTile
             className="collection-tile"
-            src={photos.ring}
+            src="/images/catalog/i14.jpg"
             alt="Rings collection"
             index="03"
             label="Rings"
@@ -138,9 +138,12 @@ export function Home() {
           <p>A considered selection of forms from the Dazzle studio.</p>
         </motion.div>
         <div className="product-grid">
-          {catalog.slice(0, 3).map((item, index) => (
-            <ProductCard key={item.id} item={item} index={index} />
-          ))}
+          {catalog
+            .filter((item) => item.name === "Tops latkan")
+            .slice(0, 3)
+            .map((item, index) => (
+              <ProductCard key={item.id} item={item} index={index} />
+            ))}
         </div>
       </section>
 

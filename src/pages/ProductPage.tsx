@@ -2,16 +2,15 @@ import { useMemo, useState, type ChangeEvent } from "react"
 import { motion, useReducedMotion } from "motion/react"
 import { useCart } from "../cart/CartContext"
 import {
-  catalog,
   familyName,
+  formatWeight,
   gramsFor,
   productById,
+  sameDesign,
   wastageRate,
-  weightOptions,
 } from "../data/catalog"
 import { AppLink } from "../components/AppLink"
 import { Icon } from "../components/Icon"
-import { MaskedImg } from "../components/MaskedImg"
 import { revealProps } from "../components/motion"
 import { Page } from "../components/Page"
 import { Studio3D } from "../components/Studio3D"
@@ -20,16 +19,12 @@ export function ProductPage({ slug }: { slug?: string }) {
   const product = productById(slug)
   const reduce = useReducedMotion()
   const { addLine, totalPcs, lines } = useCart()
-  const chips = weightOptions(product)
-  const [weight, setWeight] = useState(chips[Math.floor(chips.length / 2)])
   const [pcs, setPcs] = useState(product.moq)
   const [uploadName, setUploadName] = useState<string>()
   const projectedPcs = totalPcs + pcs
   const rate = wastageRate(product.wastage, projectedPcs)
-  const grams = gramsFor(weight, pcs, rate)
-  const related = catalog.filter(
-    (item) => item.family === product.family && item.id !== product.id,
-  ).slice(0, 3)
+  const grams = gramsFor(product.weight, pcs, rate)
+  const related = sameDesign(product).filter((item) => item.id !== product.id)
 
   const hint = useMemo(() => {
     if (projectedPcs >= 200) return "200+ pcs on this order — wastage at the floor."
@@ -45,7 +40,7 @@ export function ProductPage({ slug }: { slug?: string }) {
   function add() {
     addLine({
       productId: product.id,
-      weight,
+      weight: product.weight,
       pcs,
       uploadName,
     })
@@ -55,8 +50,7 @@ export function ProductPage({ slug }: { slug?: string }) {
     <Page>
       <section className="product-page">
         <section className="gallery product-gallery">
-          <Studio3D src={product.image} alt={`${product.name} 3D studio view`} />
-          <MaskedImg src={product.detail} alt={`${product.name} detail`} />
+          <Studio3D src={product.image} alt={`${product.name} ${formatWeight(product.weight)}`} />
         </section>
         <aside className="product-info">
           <motion.p className="eyebrow" {...revealProps(reduce)}>
@@ -69,30 +63,13 @@ export function ProductPage({ slug }: { slug?: string }) {
 
           <div className="config">
             <div className="config-head">
-              <p className="eyebrow">Weight range</p>
-              <strong>{weight.toFixed(1)} g</strong>
+              <p className="eyebrow">This photo</p>
+              <strong>{formatWeight(product.weight)}</strong>
             </div>
-            <input
-              type="range"
-              min={product.weightMin}
-              max={product.weightMax}
-              step={product.weightStep}
-              value={weight}
-              onChange={(event) => setWeight(Number(event.target.value))}
-              aria-label="Design weight"
-            />
-            <div className="weight-chips">
-              {chips.map((value) => (
-                <button
-                  type="button"
-                  key={value}
-                  className={weight === value ? "selected" : ""}
-                  onClick={() => setWeight(value)}
-                >
-                  {value.toFixed(1)} g
-                </button>
-              ))}
-            </div>
+            <p className="small-note">
+              Weight is fixed to this design. Other grams of {product.name} are
+              in the catalogue and below.
+            </p>
           </div>
 
           <div className="config">
@@ -164,16 +141,14 @@ export function ProductPage({ slug }: { slug?: string }) {
       </section>
       {related.length > 0 && (
         <section className="related wrap">
-          <p className="eyebrow">Same family</p>
+          <p className="eyebrow">Other weights · {product.name}</p>
           <div className="related-row">
             {related.map((item) => (
               <AppLink key={item.id} page="product" slug={item.id} className="related-chip">
                 <img src={item.image} alt="" />
                 <span>
-                  {item.name}
-                  <small>
-                    {item.weightMin}–{item.weightMax} g
-                  </small>
+                  {formatWeight(item.weight)}
+                  <small>{item.code}</small>
                 </span>
               </AppLink>
             ))}

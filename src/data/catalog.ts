@@ -1,5 +1,3 @@
-import { photos } from "./site"
-
 export const families = [
   { id: "tops", name: "Tops", blurb: "Latkan and pepper casting tops" },
   { id: "bali", name: "Bali", blurb: "Pipe, fishlock, Punjabi and UV forms" },
@@ -17,264 +15,92 @@ export type CatalogProduct = {
   code: string
   family: FamilyId
   image: string
-  detail: string
   note: string
-  weightMin: number
-  weightMax: number
-  weightStep: number
+  weight: number
   moq: number
   wastage: number
+  labeled?: boolean
 }
 
-const img = [
-  photos.ring,
-  photos.detail,
-  photos.portrait,
-  photos.editorial,
-  photos.mood,
-  photos.hero,
-]
+function photo(file: string) {
+  return `/images/catalog/${file}.jpg`
+}
+
+function item(
+  file: string,
+  name: string,
+  family: FamilyId,
+  code: string,
+  weight: number,
+  moq: number,
+  note: string,
+  labeled = false,
+): CatalogProduct {
+  return {
+    id: `${file}-${weight.toString().replace(".", "")}`,
+    name,
+    code,
+    family,
+    image: photo(file),
+    note,
+    weight,
+    moq,
+    wastage: 8,
+    labeled,
+  }
+}
+
+const latkan =
+  "This weight of tops latkan. Pick the gram that matches the order — each card is a different design weight."
 
 export const catalog: CatalogProduct[] = [
-  {
-    id: "tops-latkan",
-    name: "Tops latkan",
-    code: "DO–T / 012",
-    family: "tops",
-    image: img[0],
-    detail: img[1],
-    note: "Lightweight latkan tops for volume programmes. Weight is selected inside the design range, then pieces against MOQ.",
-    weightMin: 0.8,
-    weightMax: 2.2,
-    weightStep: 0.1,
-    moq: 12,
-    wastage: 8,
-  },
-  {
-    id: "pepper-casting-tops",
-    name: "Pepper casting tops",
-    code: "DO–T / 018",
-    family: "tops",
-    image: img[2],
-    detail: img[0],
-    note: "Pepper-cast tops with a tight gram window, suited to repeating wholesale sets.",
-    weightMin: 0.6,
-    weightMax: 1.8,
-    weightStep: 0.1,
-    moq: 24,
-    wastage: 8,
-  },
-  {
-    id: "uv-bali",
-    name: "U V bali",
-    code: "DO–B / 024",
-    family: "bali",
-    image: img[1],
-    detail: img[3],
-    note: "UV bali with a sculpted profile. Confirm final polish with the order.",
-    weightMin: 1.5,
-    weightMax: 4,
-    weightStep: 0.1,
-    moq: 12,
-    wastage: 8,
-  },
-  {
-    id: "pipe-bali",
-    name: "Pipe bali",
-    code: "DO–B / 031",
-    family: "bali",
-    image: img[3],
-    detail: img[1],
-    note: "Hollow pipe bali — choose weight first, then the piece count for the run.",
-    weightMin: 2,
-    weightMax: 6,
-    weightStep: 0.2,
-    moq: 12,
-    wastage: 8,
-  },
-  {
-    id: "fishlock-bali",
-    name: "Fishlock bali",
-    code: "DO–B / 036",
-    family: "bali",
-    image: img[4],
-    detail: img[0],
-    note: "Fishlock closure bali. Casting finish can be matched from a reference upload.",
-    weightMin: 1.8,
-    weightMax: 5,
-    weightStep: 0.1,
-    moq: 12,
-    wastage: 8,
-  },
-  {
-    id: "punjabi-bali",
-    name: "Punjabi bali",
-    code: "DO–B / 042",
-    family: "bali",
-    image: img[5],
-    detail: img[2],
-    note: "A fuller Punjabi bali silhouette. Heavier range, lower MOQ.",
-    weightMin: 3,
-    weightMax: 9,
-    weightStep: 0.2,
-    moq: 6,
-    wastage: 8,
-  },
-  {
-    id: "pepper-casting-rings",
-    name: "Pepper casting rings",
-    code: "DO–R / 021",
-    family: "rings",
-    image: img[0],
-    detail: img[4],
-    note: "Pepper-cast ring programme. Size and finish confirmed after the order is placed.",
-    weightMin: 1.2,
-    weightMax: 3.5,
-    weightStep: 0.1,
-    moq: 12,
-    wastage: 8,
-  },
-  {
-    id: "gents-ring",
-    name: "Gents ring",
-    code: "DO–R / 044",
-    family: "rings",
-    image: img[1],
-    detail: img[5],
-    note: "Gents casting rings across a wider gram span for mixed-weight orders.",
-    weightMin: 3,
-    weightMax: 12,
-    weightStep: 0.2,
-    moq: 6,
-    wastage: 8,
-  },
-  {
-    id: "ladies-ring",
-    name: "Ladies ring",
-    code: "DO–R / 048",
-    family: "rings",
-    image: img[2],
-    detail: img[0],
-    note: "Ladies rings with a balanced weight band for retail-ready assortments.",
-    weightMin: 2,
-    weightMax: 7,
-    weightStep: 0.2,
-    moq: 6,
-    wastage: 8,
-  },
-  {
-    id: "baby-bracelet",
-    name: "Baby bracelet",
-    code: "DO–C / 011",
-    family: "bracelets",
-    image: img[3],
-    detail: img[1],
-    note: "Delicate baby bracelet line. Minimum pieces protect casting economy.",
-    weightMin: 2,
-    weightMax: 6,
-    weightStep: 0.2,
-    moq: 6,
-    wastage: 8,
-  },
-  {
-    id: "ladies-bracelet",
-    name: "Ladies bracelet",
-    code: "DO–C / 028",
-    family: "bracelets",
-    image: img[4],
-    detail: img[2],
-    note: "Ladies bracelet forms. Weight-led buying is especially useful on this family.",
-    weightMin: 4,
-    weightMax: 14,
-    weightStep: 0.5,
-    moq: 4,
-    wastage: 8,
-  },
-  {
-    id: "maharashtrian-pendant",
-    name: "Maharashtrian pendant",
-    code: "DO–P / 016",
-    family: "pendants",
-    image: img[5],
-    detail: img[0],
-    note: "Traditional Maharashtrian pendant vocabulary, cast for contemporary finish.",
-    weightMin: 2.5,
-    weightMax: 8,
-    weightStep: 0.2,
-    moq: 6,
-    wastage: 8,
-  },
-  {
-    id: "pendants",
-    name: "Pendants",
-    code: "DO–P / 020",
-    family: "pendants",
-    image: img[0],
-    detail: img[3],
-    note: "Studio pendant assortment. Upload a reference if you need a near match.",
-    weightMin: 2,
-    weightMax: 10,
-    weightStep: 0.2,
-    moq: 6,
-    wastage: 8,
-  },
-  {
-    id: "casting-fishlock",
-    name: "Casting fishlock",
-    code: "DO–K / 007",
-    family: "casting",
-    image: img[1],
-    detail: img[4],
-    note: "Fishlock findings and matching casts for lock-led programmes.",
-    weightMin: 1.2,
-    weightMax: 3.5,
-    weightStep: 0.1,
-    moq: 12,
-    wastage: 8,
-  },
-  {
-    id: "ms-dokiya",
-    name: "M S dokiya",
-    code: "DO–K / 014",
-    family: "casting",
-    image: img[2],
-    detail: img[1],
-    note: "MS dokiya with a generous weight range for mixed-gram orders.",
-    weightMin: 3,
-    weightMax: 10,
-    weightStep: 0.2,
-    moq: 6,
-    wastage: 8,
-  },
-  {
-    id: "sui-dhaga",
-    name: "Sui dhaga",
-    code: "DO–K / 022",
-    family: "casting",
-    image: img[3],
-    detail: img[5],
-    note: "Sui dhaga line — fine grams, higher piece counts.",
-    weightMin: 1,
-    weightMax: 3,
-    weightStep: 0.1,
-    moq: 24,
-    wastage: 8,
-  },
-  {
-    id: "taar-katiya",
-    name: "Taar katiya",
-    code: "DO–K / 026",
-    family: "casting",
-    image: img[4],
-    detail: img[0],
-    note: "Taar katiya for lightweight, high-repeat casting runs.",
-    weightMin: 0.8,
-    weightMax: 2.5,
-    weightStep: 0.1,
-    moq: 24,
-    wastage: 8,
-  },
-]
+  item("i41", "Tops latkan", "tops", "DO–T / 142", 1.42, 12, latkan, true),
+  item("i8", "Tops latkan", "tops", "DO–T / 160", 1.6, 12, latkan),
+  item("i42", "Tops latkan", "tops", "DO–T / 193", 1.931, 12, latkan, true),
+  item("i11", "Tops latkan", "tops", "DO–T / 200", 2.0, 12, latkan),
+  item("i39", "Tops latkan", "tops", "DO–T / 232", 2.318, 12, latkan, true),
+  item("i4", "Tops latkan", "tops", "DO–T / 250", 2.5, 12, latkan),
+  item("i2", "Tops latkan", "tops", "DO–T / 280", 2.8, 12, latkan),
+  item("i33", "Tops latkan", "tops", "DO–T / 310", 3.1, 12, latkan),
+  item("i31", "Tops latkan", "tops", "DO–T / 340", 3.4, 12, latkan),
+  item("i12", "Tops latkan", "tops", "DO–T / 370", 3.7, 12, latkan),
+  item("i1", "Tops latkan", "tops", "DO–T / 410", 4.1, 12, latkan),
+  item("i7", "Tops latkan", "tops", "DO–T / 440", 4.4, 12, latkan),
+  item("i17", "Tops latkan", "tops", "DO–T / 487", 4.87, 12, latkan, true),
+  item("i38", "Tops latkan", "tops", "DO–T / 520", 5.2, 12, latkan),
+
+  item("i43", "Pepper casting tops", "tops", "DO–P / 080", 0.8, 24, "Round CZ pepper top at this gram."),
+  item("i28", "Pepper casting tops", "tops", "DO–P / 100", 1.0, 24, "Star-cut pepper top at this gram."),
+  item("i49", "Pepper casting tops", "tops", "DO–P / 110", 1.1, 24, "Teardrop pepper top. Gram not tagged on the photo."),
+  item("i22", "Pepper casting tops", "tops", "DO–P / 120", 1.2, 24, "Leaf pepper top at this gram."),
+  item("i27", "Pepper casting tops", "tops", "DO–P / 150", 1.5, 24, "Granulated pepper ball at this gram."),
+  item("i46", "Pepper casting tops", "tops", "DO–P / 180", 1.8, 24, "Swirl disc pepper top. Gram not tagged on the photo."),
+
+  item("i47", "Tops latkan", "tops", "DO–T / 580", 5.8, 12, "Sunburst three-jhumka latkan. Gram not tagged on the photo."),
+
+  item("i18", "Fishlock bali", "bali", "DO–B / 260", 2.6, 12, "Hoop with hanging jhumka at this gram."),
+  item("i48", "Pipe bali", "bali", "DO–B / 290", 2.9, 12, "Pipe hoop with hanging latkan. Gram not tagged on the photo."),
+  item("i10", "Punjabi bali", "bali", "DO–B / 320", 3.2, 6, "Carved bali with ghungroo. The tray shows the weight run of this design."),
+
+  item("i20", "Ladies ring", "rings", "DO–R / 240", 2.4, 6, "Stone-set ladies rings at this gram."),
+  item("i44", "Ladies ring", "rings", "DO–R / 380", 3.8, 6, "Pavé and cocktail ladies rings at this gram."),
+  item("i14", "Pepper casting rings", "rings", "DO–R / 420", 4.2, 12, "Textured pepper-cast bands at this gram."),
+
+  item("i3", "Baby bracelet", "bracelets", "DO–C / 240", 2.4, 6, "Character kada at this gram."),
+  item("i34", "Baby bracelet", "bracelets", "DO–C / 280", 2.8, 6, "Disney-style baby kada at this gram."),
+  item("i37", "Ladies bracelet", "bracelets", "DO–C / 450", 4.5, 4, "Fine oval-link bracelet at this gram."),
+  item("i16", "Ladies bracelet", "bracelets", "DO–C / 620", 6.2, 4, "Two-tone station bracelet at this gram."),
+  item("i32", "Ladies bracelet", "bracelets", "DO–C / 800", 8.0, 4, "Rose diamond-link bracelet at this gram."),
+  item("i45", "Ladies bracelet", "bracelets", "DO–C / 1050", 10.5, 4, "Pyramid station bracelet at this gram."),
+
+  item("i15", "Pendants", "pendants", "DO–N / 220", 2.2, 6, "Infinity mangalsutra pendant at this gram."),
+  item("i9", "Pendants", "pendants", "DO–N / 280", 2.8, 6, "Heart mangalsutra pendant at this gram."),
+  item("i21", "Pendants", "pendants", "DO–N / 350", 3.5, 6, "Twin-square pendant at this gram."),
+  item("i23", "Maharashtrian pendant", "pendants", "DO–N / 550", 5.5, 6, "Traditional bead-and-drop pendant at this gram."),
+
+  item("i25", "Taar katiya", "casting", "DO–K / 120", 1.2, 24, "Ball-chain taar at this gram."),
+  item("i5", "M S dokiya", "casting", "DO–K / 350", 3.5, 6, "Dokiya and sui-dhaga hangers at this gram."),
+].sort((a, b) => a.weight - b.weight)
 
 export const WASTAGE_FLOOR = 6
 export const WASTAGE_SLABS = [
@@ -291,20 +117,10 @@ export function familyName(id: FamilyId) {
   return families.find((family) => family.id === id)?.name ?? id
 }
 
-export function weightOptions(product: CatalogProduct) {
-  const values: number[] = []
-  const steps = Math.max(
-    4,
-    Math.round((product.weightMax - product.weightMin) / Math.max(product.weightStep, 0.1)),
-  )
-  const count = Math.min(steps, 7)
-  for (let i = 0; i < count; i += 1) {
-    const value =
-      product.weightMin +
-      ((product.weightMax - product.weightMin) * i) / (count - 1)
-    values.push(Number(value.toFixed(1)))
-  }
-  return values
+export function sameDesign(product: CatalogProduct) {
+  return catalog
+    .filter((item) => item.name === product.name)
+    .sort((a, b) => a.weight - b.weight)
 }
 
 export function wastageRate(defaultRate: number, totalPcs: number) {
@@ -323,6 +139,10 @@ export function gramsFor(weight: number, pcs: number, rate: number) {
   }
 }
 
-export function coversWeight(product: CatalogProduct, grams: number) {
-  return grams >= product.weightMin && grams <= product.weightMax
+export function coversWeight(product: CatalogProduct, grams: number, window = 0.6) {
+  return Math.abs(product.weight - grams) <= window
+}
+
+export function formatWeight(grams: number) {
+  return `${Number(grams.toFixed(2))} g`
 }

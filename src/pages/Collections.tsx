@@ -19,10 +19,17 @@ export function Collections({ familySlug }: { familySlug?: string }) {
   const reduce = useReducedMotion()
 
   const visible = useMemo(() => {
-    return catalog.filter((item) => {
+    const rows = catalog.filter((item) => {
       const familyOk = family === "all" || item.family === family
       const weightOk = mode === "design" || coversWeight(item, grams)
       return familyOk && weightOk
+    })
+    if (mode === "weight") {
+      return [...rows].sort((a, b) => a.weight - b.weight)
+    }
+    return [...rows].sort((a, b) => {
+      const name = a.name.localeCompare(b.name)
+      return name !== 0 ? name : a.weight - b.weight
     })
   }, [family, grams, mode])
 
@@ -33,14 +40,13 @@ export function Collections({ familySlug }: { familySlug?: string }) {
           Wholesale catalogue
         </motion.p>
         <motion.h1 {...revealProps(reduce, 0.05)}>
-          Order by design,
+          Same design,
           <br />
-          or by <em>weight.</em>
+          different <em>weights.</em>
         </motion.h1>
         <motion.p {...revealProps(reduce, 0.1)}>
-          Choose a family, set the gram window, then add pieces to cart. Wastage
-          is applied at a fixed rate and eases on larger orders, never below the
-          floor.
+          Each card is one gram of a design. Tops latkan, for example, appears
+          as a ladder of weights — pick the photo, then only the piece count.
         </motion.p>
       </section>
       <section className="catalog wrap">
@@ -63,19 +69,19 @@ export function Collections({ familySlug }: { familySlug?: string }) {
         {mode === "weight" && (
           <div className="weight-seek">
             <div>
-              <p className="eyebrow">Target weight</p>
+              <p className="eyebrow">Around this gram</p>
               <strong>{grams.toFixed(1)} g</strong>
             </div>
             <input
               type="range"
               min={0.6}
-              max={14}
+              max={12}
               step={0.1}
               value={grams}
               onChange={(event) => setGrams(Number(event.target.value))}
               aria-label="Target weight in grams"
             />
-            <span>Designs whose range includes this gram.</span>
+            <span>Designs whose photo sits near this weight.</span>
           </div>
         )}
         <motion.div className="filters" {...revealProps(reduce)}>
@@ -96,7 +102,7 @@ export function Collections({ familySlug }: { familySlug?: string }) {
               {item.name}
             </button>
           ))}
-          <span>{visible.length} designs</span>
+          <span>{visible.length} weights</span>
         </motion.div>
         {visible.length ? (
           <div className="product-grid catalog-grid">

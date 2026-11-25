@@ -472,6 +472,23 @@ em {
   transform: scale(1.025);
 }
 
+.weight-badge {
+  position: absolute;
+  z-index: 3;
+  top: 1rem;
+  left: 1rem;
+  margin: 0;
+  padding: 0.45rem 0.7rem;
+  background: #1c1b19;
+  color: #f5f1e9;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-style: normal;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
 .product-image span {
   position: absolute;
   opacity: 0;
@@ -1713,6 +1730,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .product-gallery {
   background: #3d3328;
+  grid-template-columns: 1fr;
 }
 
 .studio {
@@ -1922,7 +1940,7 @@ input[type="range"]::-webkit-slider-thumb {
 
 .related-row {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1rem;
   margin-top: 1.5rem;
 }
