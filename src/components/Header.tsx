@@ -1,6 +1,7 @@
 import { useState } from "react"
 import { nav } from "../data/site"
 import type { Page } from "../data/site"
+import { useAuth } from "../auth/AuthContext"
 import { useCart } from "../cart/CartContext"
 import { AppLink } from "./AppLink"
 import { Icon } from "./Icon"
@@ -8,6 +9,7 @@ import { Icon } from "./Icon"
 export function Header({ page }: { page: Page }) {
   const [open, setOpen] = useState(false)
   const { count, toast } = useCart()
+  const { user } = useAuth()
 
   return (
     <>
@@ -38,18 +40,30 @@ export function Header({ page }: { page: Page }) {
           ))}
         </nav>
         <div className="header-actions">
-          <AppLink page="search" aria-label="Search">
-            <Icon name="search" />
-          </AppLink>
+          {user && (
+            <AppLink page="search" aria-label="Search">
+              <Icon name="search" />
+            </AppLink>
+          )}
           <AppLink
-            page="cart"
-            className={`cart-link ${count > 0 ? "has-items" : ""} ${page === "cart" ? "active" : ""}`}
-            aria-label={`Cart, ${count} designs`}
+            page="account"
+            className={page === "account" ? "active" : ""}
+            aria-label={user ? "Account" : "Log in"}
           >
-            <Icon name="bag" />
-            <span>Cart</span>
-            <b>{count}</b>
+            <Icon name="user" />
+            <span className="account-label">{user ? "Account" : "Log in"}</span>
           </AppLink>
+          {user && (
+            <AppLink
+              page="cart"
+              className={`cart-link ${page === "cart" ? "active" : ""}`}
+              aria-label={count > 0 ? `Cart, ${count} designs` : "Cart"}
+            >
+              <Icon name="bag" />
+              <span>Cart</span>
+              {count > 0 && <b>{count}</b>}
+            </AppLink>
+          )}
         </div>
       </header>
       <div className={`mobile-menu ${open ? "open" : ""}`}>
@@ -73,10 +87,14 @@ export function Header({ page }: { page: Page }) {
               {label}
             </AppLink>
           ))}
+          <AppLink page="account" onNavigate={() => setOpen(false)}>
+            <span>06</span>
+            {user ? "Account" : "Log in"}
+          </AppLink>
         </div>
         <p>Rajkot · Gujarat · India</p>
       </div>
-      {toast && (
+      {user && toast && (
         <AppLink page="cart" className="cart-toast">
           {toast} · Open cart <Icon name="arrow" />
         </AppLink>

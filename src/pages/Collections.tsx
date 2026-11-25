@@ -70,7 +70,7 @@ export function Collections({ familySlug }: { familySlug?: string }) {
           <div className="weight-seek">
             <div>
               <p className="eyebrow">Around this gram</p>
-              <strong>{grams.toFixed(1)} g</strong>
+              <strong className="num">{grams.toFixed(1)} g</strong>
             </div>
             <input
               type="range"

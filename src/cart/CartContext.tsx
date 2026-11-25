@@ -2,23 +2,31 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react"
+import { useAuth } from "../auth/AuthContext"
 import {
   catalog,
   gramsFor,
   wastageRate,
   type CatalogProduct,
 } from "../data/catalog"
-import { submitOrder } from "../lib/backend"
+import {
+  loadRemoteCart,
+  saveRemoteCart,
+  submitOrder,
+} from "../lib/backend"
 
 export type CartLine = {
   key: string
   productId: string
   weight: number
   pcs: number
+  custom?: boolean
   uploadName?: string
 }
 
@@ -55,11 +63,32 @@ type CartContextValue = {
 }
 
 const CartContext = createContext<CartContextValue | null>(null)
-const storageKey = "dazzle-cart-v1"
 
-function loadLines(): CartLine[] {
+const REMOTE_CART_CLEARED = "dazzle-remote-cart-cleared-v3"
+
+function storageKey(userId?: string | null) {
+  return userId ? `dazzle-cart-${userId}` : "dazzle-cart-guest"
+}
+
+function remoteCartNeedsClear() {
   try {
-    const raw = localStorage.getItem(storageKey)
+    return localStorage.getItem(REMOTE_CART_CLEARED) !== "1"
+  } catch {
+    return true
+  }
+}
+
+function markRemoteCartCleared() {
+  try {
+    localStorage.setItem(REMOTE_CART_CLEARED, "1")
+  } catch {
+    /* private mode */
+  }
+}
+
+function loadLines(userId?: string | null): CartLine[] {
+  try {
+    const raw = localStorage.getItem(storageKey(userId))
     if (!raw) return []
     const parsed = JSON.parse(raw) as CartLine[]
     return Array.isArray(parsed) ? parsed : []
@@ -75,20 +104,75 @@ function lineProduct(line: CartLine): CatalogProduct | undefined {
 export function lineTotals(line: CartLine, orderPcs: number) {
   const product = lineProduct(line)
   const rate = wastageRate(product?.wastage ?? 8, orderPcs)
-  return { product, rate, ...gramsFor(line.weight, line.pcs, rate) }
+  const pcs = line.custom ? 1 : line.pcs
+  return { product, rate, ...gramsFor(line.weight, pcs, rate) }
 }
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [lines, setLines] = useState<CartLine[]>(loadLines)
+  const { user } = useAuth()
+  const [lines, setLines] = useState<CartLine[]>([])
   const [toast, setToast] = useState<string | null>(null)
   const [placed, setPlaced] = useState<PlacedOrder | null>(null)
   const [orderFile, setOrderFile] = useState<File | undefined>()
   const orderUploadName = orderFile?.name
+  const saveTimer = useRef<number>(0)
+  const hydratedFor = useRef<string | null | undefined>(undefined)
+  const userId = user?.id ?? null
 
-  const persist = useCallback((next: CartLine[]) => {
-    setLines(next)
-    localStorage.setItem(storageKey, JSON.stringify(next))
-  }, [])
+  const persist = useCallback(
+    (next: CartLine[]) => {
+      setLines(next)
+      localStorage.setItem(storageKey(userId), JSON.stringify(next))
+      if (!userId) return
+      window.clearTimeout(saveTimer.current)
+      saveTimer.current = window.setTimeout(() => {
+        void saveRemoteCart(userId, next).catch(() => undefined)
+      }, 400)
+    },
+    [userId],
+  )
+
+  useEffect(() => {
+    if (hydratedFor.current === userId && !remoteCartNeedsClear()) return
+    hydratedFor.current = userId
+    window.clearTimeout(saveTimer.current)
+
+    if (remoteCartNeedsClear()) {
+      setLines([])
+      localStorage.setItem(storageKey(userId), JSON.stringify([]))
+      if (!userId) return
+      let active = true
+      void saveRemoteCart(userId, [])
+        .then(() => {
+          if (!active) return
+          markRemoteCartCleared()
+          persist([])
+        })
+        .catch(() => undefined)
+      return () => {
+        active = false
+      }
+    }
+
+    if (!userId) {
+      setLines(loadLines(null))
+      return
+    }
+
+    let active = true
+    loadRemoteCart(userId)
+      .then((remote) => {
+        if (!active) return
+        persist(remote.length ? remote : loadLines(userId))
+      })
+      .catch(() => {
+        if (!active) return
+        persist(loadLines(userId))
+      })
+    return () => {
+      active = false
+    }
+  }, [persist, userId])
 
   const addLine = useCallback(
     (incoming: Omit<CartLine, "key">) => {
@@ -98,14 +182,18 @@ export function CartProvider({ children }: { children: ReactNode }) {
           const existing = lines.find(
             (line) =>
               line.productId === incoming.productId &&
-              line.weight === incoming.weight,
+              Boolean(line.custom) === Boolean(incoming.custom) &&
+              (incoming.custom || line.weight === incoming.weight),
           )
           if (existing) {
             return lines.map((line) =>
               line.key === existing.key
                 ? {
                     ...line,
-                    pcs: line.pcs + incoming.pcs,
+                    pcs: incoming.custom ? line.pcs : line.pcs + incoming.pcs,
+                    weight: incoming.custom
+                      ? line.weight + incoming.weight
+                      : line.weight,
                     uploadName: incoming.uploadName ?? line.uploadName,
                   }
                 : line,
@@ -130,7 +218,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     (key: string, pcs: number) => {
       persist(
         lines.map((line) => {
-          if (line.key !== key) return line
+          if (line.key !== key || line.custom) return line
           const min = lineProduct(line)?.moq ?? 1
           return { ...line, pcs: Math.max(min, pcs) }
         }),
@@ -170,7 +258,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [lines, orderFile, persist],
   )
 
-  const totalPcs = lines.reduce((sum, line) => sum + line.pcs, 0)
+  const totalPcs = lines.reduce(
+    (sum, line) => sum + (line.custom ? 0 : line.pcs),
+    0,
+  )
   const totalBillable = Number(
     lines
       .reduce((sum, line) => sum + lineTotals(line, totalPcs).billable, 0)

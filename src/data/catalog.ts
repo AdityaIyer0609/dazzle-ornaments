@@ -15,6 +15,7 @@ export type CatalogProduct = {
   code: string
   family: FamilyId
   image: string
+  imageFull: string
   note: string
   weight: number
   moq: number
@@ -23,7 +24,11 @@ export type CatalogProduct = {
 }
 
 function photo(file: string) {
-  return `/images/catalog/${file}.jpg`
+  return `/images/catalog-src/${file}.jpg`
+}
+
+function photoFull(file: string) {
+  return `/images/catalog/${file}.jpg?v=8x`
 }
 
 function item(
@@ -42,6 +47,7 @@ function item(
     code,
     family,
     image: photo(file),
+    imageFull: photoFull(file),
     note,
     weight,
     moq,
@@ -123,6 +129,21 @@ export function sameDesign(product: CatalogProduct) {
     .sort((a, b) => a.weight - b.weight)
 }
 
+export const WEIGHT_TRACK = { min: 0.5, max: 12, step: 0.5 }
+
+export function defaultGramWindow(weight: number) {
+  let start = Math.max(
+    WEIGHT_TRACK.min,
+    Number((Math.floor(weight * 2) / 2).toFixed(2)),
+  )
+  let end = Number((start + 0.5).toFixed(2))
+  if (end > WEIGHT_TRACK.max) {
+    end = WEIGHT_TRACK.max
+    start = Number((end - 0.5).toFixed(2))
+  }
+  return { start, end }
+}
+
 export function wastageRate(defaultRate: number, totalPcs: number) {
   const slab = [...WASTAGE_SLABS].reverse().find((item) => totalPcs >= item.minPcs)
   const discounted = defaultRate - (slab?.discount ?? 0)
@@ -135,7 +156,7 @@ export function gramsFor(weight: number, pcs: number, rate: number) {
   return {
     net: Number(net.toFixed(2)),
     wastage: Number(wastage.toFixed(2)),
-    billable: Number((net + wastage).toFixed(2)),
+    billable: Number(net.toFixed(2)),
   }
 }
 

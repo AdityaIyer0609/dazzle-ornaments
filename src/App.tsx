@@ -1,10 +1,14 @@
 import { useEffect, useState } from "react"
-import { readRoute, type Route } from "./data/site"
+import { AuthProvider, useAuth } from "./auth/AuthContext"
 import { CartProvider } from "./cart/CartContext"
 import { Enquiry } from "./components/Enquiry"
 import { Footer } from "./components/Footer"
 import { Header } from "./components/Header"
+import { LoginPrompt } from "./components/LoginPrompt"
 import { Page as PageShell } from "./components/Page"
+import { readRoute, type Route } from "./data/site"
+import { AccountPage } from "./pages/AccountPage"
+import { AuthPage } from "./pages/AuthPage"
 import { CartPage } from "./pages/CartPage"
 import { Collections } from "./pages/Collections"
 import { Home } from "./pages/Home"
@@ -14,13 +18,16 @@ import { StoryPage } from "./pages/StoryPage"
 
 export default function App() {
   return (
-    <CartProvider>
-      <AppShell />
-    </CartProvider>
+    <AuthProvider>
+      <CartProvider>
+        <AppShell />
+      </CartProvider>
+    </AuthProvider>
   )
 }
 
 function AppShell() {
+  const { user, ready, askLogin } = useAuth()
   const [route, setRoute] = useState<Route>(() => readRoute())
 
   useEffect(() => {
@@ -44,11 +51,35 @@ function AppShell() {
     }
   }, [])
 
+  const authGate = route.page === "account" && (!ready || !user)
+  const locked =
+    ready &&
+    !user &&
+    (route.page === "product" || route.page === "cart" || route.page === "search")
+
+  useEffect(() => {
+    if (!locked) return
+    askLogin(
+      route.page === "product"
+        ? "You need to log in to see item details."
+        : "You need to log in to continue.",
+    )
+    window.location.hash = "collections"
+  }, [askLogin, locked, route.page])
+
+  if (authGate) {
+    return <AuthPage />
+  }
+
   return (
     <>
       <Header page={route.page} />
-      <PageView key={`${route.page}/${route.slug ?? ""}`} route={route} />
+      <PageView
+        key={`${(locked ? "collections" : route.page)}/${route.slug ?? ""}`}
+        route={locked ? { page: "collections" } : route}
+      />
       <Footer />
+      <LoginPrompt />
     </>
   )
 }
@@ -71,6 +102,8 @@ function PageView({ route }: { route: Route }) {
           <Enquiry />
         </PageShell>
       )
+    case "account":
+      return <AccountPage />
     case "search":
       return <SearchPage />
     default:

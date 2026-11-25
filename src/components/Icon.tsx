@@ -1,7 +1,19 @@
 export function Icon({
   name,
 }: {
-  name: "search" | "menu" | "close" | "arrow" | "bag" | "plus" | "minus" | "upload"
+  name:
+    | "search"
+    | "menu"
+    | "close"
+    | "arrow"
+    | "bag"
+    | "plus"
+    | "minus"
+    | "upload"
+    | "zoom"
+    | "user"
+    | "eye"
+    | "eyeOff"
 }) {
   const paths = {
     search: (
@@ -25,6 +37,32 @@ export function Icon({
       <>
         <path d="M12 16V6m0 0 4 4M12 6 8 10" />
         <path d="M5 18h14" />
+      </>
+    ),
+    zoom: (
+      <>
+        <circle cx="10.5" cy="10.5" r="6" />
+        <path d="m15.2 15.2 5.3 5.3" />
+        <path d="M10.5 8v5M8 10.5h5" />
+      </>
+    ),
+    user: (
+      <>
+        <circle cx="12" cy="8" r="3.2" />
+        <path d="M5 19c1.4-3.2 3.8-5 7-5s5.6 1.8 7 5" />
+      </>
+    ),
+    eye: (
+      <>
+        <path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12Z" />
+        <circle cx="12" cy="12" r="2.6" />
+      </>
+    ),
+    eyeOff: (
+      <>
+        <path d="M2.5 12s3.5-6.5 9.5-6.5S21.5 12 21.5 12s-3.5 6.5-9.5 6.5S2.5 12 2.5 12Z" />
+        <circle cx="12" cy="12" r="2.6" />
+        <path d="m5 19 14-14" />
       </>
     ),
   }

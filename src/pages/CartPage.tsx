@@ -1,5 +1,6 @@
 import { useState, type ChangeEvent, type FormEvent } from "react"
 import { motion, useReducedMotion } from "motion/react"
+import { useAuth } from "../auth/AuthContext"
 import { lineTotals, useCart } from "../cart/CartContext"
 import { WASTAGE_SLABS, wastageRate } from "../data/catalog"
 import { AppLink } from "../components/AppLink"
@@ -21,6 +22,7 @@ export function CartPage() {
     orderUploadName,
     setOrderUpload,
   } = useCart()
+  const { user, profile } = useAuth()
   const [busy, setBusy] = useState(false)
   const [submitError, setSubmitError] = useState("")
   if (placed) {
@@ -34,8 +36,9 @@ export function CartPage() {
             <em>is with the desk.</em>
           </h1>
           <p>
-            {placed.name}, we have {placed.pcs} pcs totalling {placed.billable.toFixed(2)} g
-            billable gold. Making and the live gold rate will be confirmed shortly.
+            {placed.name}, we have {placed.billable.toFixed(2)} g billable gold
+            {placed.pcs ? ` · ${placed.pcs} pcs` : ""}. Making and the live gold
+            rate will be confirmed shortly.
           </p>
           <div className="cart-confirm-actions">
             <AppLink page="collections" className="button dark-button" onNavigate={clearPlaced}>
@@ -65,6 +68,10 @@ export function CartPage() {
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
+    if (!user) {
+      setSubmitError("Log in to place and save this order.")
+      return
+    }
     setBusy(true)
     setSubmitError("")
     try {
@@ -111,27 +118,31 @@ export function CartPage() {
                 </AppLink>
                 <div className="cart-line-copy">
                   <p>
-                    {product.code} · {line.weight.toFixed(1)} g
+                    {product.code} · <span className="num">{line.weight.toFixed(1)} g</span>
                   </p>
                   <h3>{product.name}</h3>
                   {line.uploadName && <small>Reference · {line.uploadName}</small>}
-                  <div className="qty compact">
-                    <button
-                      type="button"
-                      onClick={() => updatePcs(line.key, line.pcs - 1)}
-                      aria-label="Decrease"
-                    >
-                      <Icon name="minus" />
-                    </button>
-                    <span>{line.pcs} pcs</span>
-                    <button
-                      type="button"
-                      onClick={() => updatePcs(line.key, line.pcs + 1)}
-                      aria-label="Increase"
-                    >
-                      <Icon name="plus" />
-                    </button>
-                  </div>
+                  {line.custom ? (
+                    <small>Custom order · grams only</small>
+                  ) : (
+                    <div className="qty compact">
+                      <button
+                        type="button"
+                        onClick={() => updatePcs(line.key, line.pcs - 1)}
+                        aria-label="Decrease"
+                      >
+                        <Icon name="minus" />
+                      </button>
+                      <span>{line.pcs} pcs</span>
+                      <button
+                        type="button"
+                        onClick={() => updatePcs(line.key, line.pcs + 1)}
+                        aria-label="Increase"
+                      >
+                        <Icon name="plus" />
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="cart-math">
                   <b>{billable.toFixed(2)} g</b>
@@ -151,33 +162,63 @@ export function CartPage() {
             <p className="eyebrow">Checkout</p>
             <p className="cart-total">{totalBillable.toFixed(2)} g</p>
             <p className="cart-summary-meta">
-              {totalPcs} pcs · wastage {wastageRate(8, totalPcs)}% · gold rate on
-              confirmation
+              {totalPcs ? `${totalPcs} pcs · ` : "Custom grams · "}
+              wastage {wastageRate(8, totalPcs)}% · gold rate on confirmation
             </p>
-            {nextSlab && (
+            {nextSlab && totalPcs > 0 && (
               <p className="small-note">
                 Add {nextSlab.minPcs - totalPcs} pcs for {nextSlab.label.toLowerCase()}{" "}
                 wastage.
               </p>
             )}
           </div>
+          {!user && (
+            <p className="qty-error" role="status">
+              Log in to place this order so it is saved to your history.
+            </p>
+          )}
+          {!user && (
+            <AppLink page="account" className="button dark-button">
+              Log in or sign up <Icon name="arrow" />
+            </AppLink>
+          )}
           <form className="cart-form" onSubmit={submit}>
             <label>
               Name
-              <input required name="name" placeholder="Your full name" />
+              <input
+                required
+                name="name"
+                placeholder="Your full name"
+                defaultValue={profile?.full_name ?? ""}
+              />
             </label>
             <label>
               Company
-              <input name="company" placeholder="Business name" />
+              <input
+                name="company"
+                placeholder="Business name"
+                defaultValue={profile?.company ?? ""}
+              />
             </label>
             <div>
               <label>
                 Email
-                <input required type="email" name="email" placeholder="name@company.com" />
+                <input
+                  required
+                  type="email"
+                  name="email"
+                  placeholder="name@company.com"
+                  defaultValue={profile?.email ?? ""}
+                />
               </label>
               <label>
                 Phone
-                <input required name="phone" placeholder="Mobile" />
+                <input
+                  required
+                  name="phone"
+                  placeholder="Mobile"
+                  defaultValue={profile?.phone ?? ""}
+                />
               </label>
             </div>
             <label>
@@ -197,7 +238,7 @@ export function CartPage() {
                 {submitError}
               </p>
             )}
-            <button className="button dark-button" type="submit" disabled={busy}>
+            <button className="button dark-button" type="submit" disabled={busy || !user}>
               {busy ? "Sending order…" : "Place order"} <Icon name="arrow" />
             </button>
           </form>

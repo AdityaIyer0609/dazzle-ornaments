@@ -1,6 +1,8 @@
+import { useAuth } from "../auth/AuthContext"
 import { AppLink } from "./AppLink"
 
 export function Footer() {
+  const { user } = useAuth()
   return (
     <footer>
       <div className="footer-main">
@@ -15,14 +17,14 @@ export function Footer() {
         <div>
           <p>Explore</p>
           <AppLink page="collections">Catalogue</AppLink>
-          <AppLink page="cart">Cart</AppLink>
+          {user && <AppLink page="cart">Cart</AppLink>}
           <AppLink page="craft">Craftsmanship</AppLink>
           <AppLink page="about">Our House</AppLink>
         </div>
         <div>
           <p>Connect</p>
           <AppLink page="contact">Business Enquiries</AppLink>
-          <AppLink page="search">Search</AppLink>
+          {user && <AppLink page="search">Search</AppLink>}
           <button type="button">Instagram</button>
         </div>
         <div>

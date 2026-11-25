@@ -16,6 +16,7 @@ export const pages = [
   "contact",
   "search",
   "cart",
+  "account",
 ] as const
 
 export type Page = (typeof pages)[number]

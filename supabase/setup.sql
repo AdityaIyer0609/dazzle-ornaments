@@ -1,4 +1,5 @@
 -- Run this once in the Supabase SQL editor (Dashboard → SQL).
+-- Then run supabase/auth.sql for login, saved carts, and order history.
 
 create table if not exists public.products (
   id text primary key,
