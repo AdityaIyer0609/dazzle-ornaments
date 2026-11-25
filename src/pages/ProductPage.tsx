@@ -1,4 +1,4 @@
-import { useMemo, useState, type ChangeEvent } from "react"
+import { useMemo, useRef, useState, type ChangeEvent } from "react"
 import { motion, useReducedMotion } from "motion/react"
 import { useCart } from "../cart/CartContext"
 import {
@@ -19,9 +19,13 @@ export function ProductPage({ slug }: { slug?: string }) {
   const product = productById(slug)
   const reduce = useReducedMotion()
   const { addLine, totalPcs, lines } = useCart()
+  const pcsRef = useRef<HTMLInputElement>(null)
+  const pcsBlockRef = useRef<HTMLDivElement>(null)
   const [pcs, setPcs] = useState(product.moq)
+  const [pcsText, setPcsText] = useState(String(product.moq))
+  const [pcsError, setPcsError] = useState("")
   const [uploadName, setUploadName] = useState<string>()
-  const projectedPcs = totalPcs + pcs
+  const projectedPcs = totalPcs + Math.max(pcs, 0)
   const rate = wastageRate(product.wastage, projectedPcs)
   const grams = gramsFor(product.weight, pcs, rate)
   const related = sameDesign(product).filter((item) => item.id !== product.id)
@@ -37,11 +41,63 @@ export function ProductPage({ slug }: { slug?: string }) {
     setUploadName(file?.name)
   }
 
+  function setValidPcs(next: number) {
+    const value = Math.max(product.moq, Math.floor(next))
+    setPcs(value)
+    setPcsText(String(value))
+    setPcsError("")
+  }
+
+  function onPcsChange(event: ChangeEvent<HTMLInputElement>) {
+    const raw = event.target.value
+    if (raw === "") {
+      setPcsText("")
+      setPcsError("")
+      return
+    }
+    if (!/^\d+$/.test(raw)) return
+    setPcsText(raw)
+    const n = Number(raw)
+    if (n >= product.moq) {
+      setPcs(n)
+      setPcsError("")
+    }
+  }
+
+  function onPcsBlur() {
+    if (pcsText.trim() === "") {
+      setValidPcs(product.moq)
+      return
+    }
+    const n = Number(pcsText)
+    if (!Number.isFinite(n) || n < product.moq) {
+      setPcsError(`Not possible. Minimum order is ${product.moq} pcs.`)
+      setPcs(product.moq)
+      return
+    }
+    setValidPcs(n)
+  }
+
+  function revealPcsError() {
+    setPcsError(`Not possible. Minimum order is ${product.moq} pcs.`)
+    pcsBlockRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })
+    window.setTimeout(() => {
+      pcsRef.current?.focus({ preventScroll: true })
+      pcsRef.current?.select()
+    }, 320)
+  }
+
   function add() {
+    const n = Number(pcsText)
+    if (pcsText.trim() === "" || !Number.isFinite(n) || n < product.moq) {
+      if (pcsText.trim() === "") setPcsText(String(product.moq))
+      revealPcsError()
+      return
+    }
     addLine({
       productId: product.id,
       weight: product.weight,
-      pcs,
+      pcs: n,
       uploadName,
     })
   }
@@ -72,34 +128,43 @@ export function ProductPage({ slug }: { slug?: string }) {
             </p>
           </div>
 
-          <div className="config">
+          <div className="config" id="pieces" ref={pcsBlockRef}>
             <div className="config-head">
               <p className="eyebrow">Pieces · MOQ {product.moq}</p>
             </div>
-            <div className="qty">
+            <div className={`qty ${pcsError ? "qty-invalid" : ""}`}>
               <button
                 type="button"
                 aria-label="Decrease pieces"
-                onClick={() => setPcs((value) => Math.max(product.moq, value - 1))}
+                onClick={() => setValidPcs(pcs - 1)}
               >
                 <Icon name="minus" />
               </button>
               <input
-                type="number"
+                ref={pcsRef}
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 min={product.moq}
-                value={pcs}
-                onChange={(event) =>
-                  setPcs(Math.max(product.moq, Number(event.target.value) || product.moq))
-                }
+                value={pcsText}
+                onChange={onPcsChange}
+                onBlur={onPcsBlur}
+                aria-invalid={Boolean(pcsError)}
+                aria-describedby={pcsError ? "pcs-error" : undefined}
               />
               <button
                 type="button"
                 aria-label="Increase pieces"
-                onClick={() => setPcs((value) => value + 1)}
+                onClick={() => setValidPcs(pcs + 1)}
               >
                 <Icon name="plus" />
               </button>
             </div>
+            {pcsError && (
+              <p id="pcs-error" className="qty-error" role="alert">
+                {pcsError}
+              </p>
+            )}
           </div>
 
           <div className="spec order-spec">

@@ -277,6 +277,11 @@ em {
   background: var(--color-gold);
 }
 
+.button:disabled {
+  opacity: 0.55;
+  pointer-events: none;
+}
+
 .hero-index {
   position: absolute;
   right: var(--pad);
@@ -1878,6 +1883,17 @@ input[type="range"]::-webkit-slider-thumb {
 .qty input::-webkit-outer-spin-button,
 .qty input::-webkit-inner-spin-button {
   -webkit-appearance: none;
+}
+
+.qty.qty-invalid {
+  border-color: #b42318;
+}
+
+.qty-error {
+  margin: 0.7rem 0 0;
+  color: #b42318;
+  font-size: 13px;
+  letter-spacing: 0.04em;
 }
 
 .qty.compact {

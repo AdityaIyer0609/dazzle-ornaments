@@ -1,15 +1,34 @@
 import { useState, type FormEvent } from "react"
 import { motion, useReducedMotion } from "motion/react"
+import { submitEnquiry } from "../lib/backend"
 import { Icon } from "./Icon"
 import { revealProps } from "./motion"
 
 export function Enquiry({ compact = false }: { compact?: boolean }) {
   const [sent, setSent] = useState(false)
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState("")
   const reduce = useReducedMotion()
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setSent(true)
+    const data = new FormData(event.currentTarget)
+    setBusy(true)
+    setError("")
+    try {
+      await submitEnquiry({
+        name: String(data.get("name") ?? ""),
+        company: String(data.get("company") ?? ""),
+        email: String(data.get("email") ?? ""),
+        type: String(data.get("type") ?? ""),
+        message: String(data.get("message") ?? ""),
+      })
+      setSent(true)
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not send the enquiry.")
+    } finally {
+      setBusy(false)
+    }
   }
 
   return (
@@ -82,8 +101,13 @@ export function Enquiry({ compact = false }: { compact?: boolean }) {
               name="message"
             />
           </label>
-          <button className="button dark-button" type="submit">
-            Send enquiry <Icon name="arrow" />
+          {error && (
+            <p className="qty-error" role="alert">
+              {error}
+            </p>
+          )}
+          <button className="button dark-button" type="submit" disabled={busy}>
+            {busy ? "Sending…" : "Send enquiry"} <Icon name="arrow" />
           </button>
         </motion.form>
       )}

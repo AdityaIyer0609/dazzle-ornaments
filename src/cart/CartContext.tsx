@@ -12,6 +12,7 @@ import {
   wastageRate,
   type CatalogProduct,
 } from "../data/catalog"
+import { submitOrder } from "../lib/backend"
 
 export type CartLine = {
   key: string
@@ -39,11 +40,14 @@ type CartContextValue = {
   toast: string | null
   placed: PlacedOrder | null
   orderUploadName?: string
+  orderFile?: File
   addLine: (line: Omit<CartLine, "key">) => void
   updatePcs: (key: string, pcs: number) => void
   removeLine: (key: string) => void
-  setOrderUploadName: (name?: string) => void
-  placeOrder: (details: Omit<PlacedOrder, "id" | "lines" | "pcs" | "billable">) => void
+  setOrderUpload: (file?: File) => void
+  placeOrder: (
+    details: Omit<PlacedOrder, "id" | "lines" | "pcs" | "billable">,
+  ) => Promise<void>
   clearPlaced: () => void
   totalPcs: number
   totalBillable: number
@@ -78,7 +82,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>(loadLines)
   const [toast, setToast] = useState<string | null>(null)
   const [placed, setPlaced] = useState<PlacedOrder | null>(null)
-  const [orderUploadName, setOrderUploadName] = useState<string | undefined>()
+  const [orderFile, setOrderFile] = useState<File | undefined>()
+  const orderUploadName = orderFile?.name
 
   const persist = useCallback((next: CartLine[]) => {
     setLines(next)
@@ -140,24 +145,29 @@ export function CartProvider({ children }: { children: ReactNode }) {
   )
 
   const placeOrder = useCallback(
-    (details: Omit<PlacedOrder, "id" | "lines" | "pcs" | "billable">) => {
-      const pcs = lines.reduce((sum, line) => sum + line.pcs, 0)
-      const billable = lines.reduce((sum, line) => {
-        const { billable: grams } = lineTotals(line, pcs)
-        return sum + grams
-      }, 0)
+    async (details: Omit<PlacedOrder, "id" | "lines" | "pcs" | "billable">) => {
+      const snapshot = lines
+      const result = await submitOrder({
+        name: details.name,
+        company: details.company,
+        email: details.email,
+        phone: details.phone,
+        note: details.note,
+        file: orderFile,
+        lines: snapshot,
+      })
       setPlaced({
         ...details,
-        id: `DO–${Date.now().toString().slice(-6)}`,
-        lines,
-        pcs,
-        billable: Number(billable.toFixed(2)),
-        uploadName: details.uploadName ?? orderUploadName,
+        id: result.id,
+        lines: snapshot,
+        pcs: result.pcs,
+        billable: result.billable,
+        uploadName: orderFile?.name,
       })
       persist([])
-      setOrderUploadName(undefined)
+      setOrderFile(undefined)
     },
-    [lines, orderUploadName, persist],
+    [lines, orderFile, persist],
   )
 
   const totalPcs = lines.reduce((sum, line) => sum + line.pcs, 0)
@@ -173,10 +183,11 @@ export function CartProvider({ children }: { children: ReactNode }) {
       toast,
       placed,
       orderUploadName,
+      orderFile,
       addLine,
       updatePcs,
       removeLine,
-      setOrderUploadName,
+      setOrderUpload: setOrderFile,
       placeOrder,
       clearPlaced: () => setPlaced(null),
       totalPcs,
@@ -186,6 +197,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
     [
       addLine,
       lines,
+      orderFile,
       orderUploadName,
       placeOrder,
       removeLine,

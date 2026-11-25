@@ -1,4 +1,4 @@
-import { type ChangeEvent, type FormEvent } from "react"
+import { useState, type ChangeEvent, type FormEvent } from "react"
 import { motion, useReducedMotion } from "motion/react"
 import { lineTotals, useCart } from "../cart/CartContext"
 import { WASTAGE_SLABS, wastageRate } from "../data/catalog"
@@ -19,8 +19,10 @@ export function CartPage() {
     placed,
     clearPlaced,
     orderUploadName,
-    setOrderUploadName,
+    setOrderUpload,
   } = useCart()
+  const [busy, setBusy] = useState(false)
+  const [submitError, setSubmitError] = useState("")
   if (placed) {
     return (
       <Page className="page-main">
@@ -60,21 +62,31 @@ export function CartPage() {
     )
   }
 
-  function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     const data = new FormData(event.currentTarget)
-    placeOrder({
-      name: String(data.get("name") ?? ""),
-      company: String(data.get("company") ?? ""),
-      email: String(data.get("email") ?? ""),
-      phone: String(data.get("phone") ?? ""),
-      note: String(data.get("note") ?? ""),
-      uploadName: orderUploadName,
-    })
+    setBusy(true)
+    setSubmitError("")
+    try {
+      await placeOrder({
+        name: String(data.get("name") ?? ""),
+        company: String(data.get("company") ?? ""),
+        email: String(data.get("email") ?? ""),
+        phone: String(data.get("phone") ?? ""),
+        note: String(data.get("note") ?? ""),
+        uploadName: orderUploadName,
+      })
+    } catch (error) {
+      setSubmitError(
+        error instanceof Error ? error.message : "Could not place the order.",
+      )
+    } finally {
+      setBusy(false)
+    }
   }
 
   function onFile(event: ChangeEvent<HTMLInputElement>) {
-    setOrderUploadName(event.target.files?.[0]?.name)
+    setOrderUpload(event.target.files?.[0])
   }
 
   const nextSlab = WASTAGE_SLABS.find((slab) => totalPcs < slab.minPcs)
@@ -202,8 +214,13 @@ export function CartPage() {
               </span>
               <input type="file" accept="image/*" onChange={onFile} />
             </label>
-            <button className="button dark-button" type="submit">
-              Place order <Icon name="arrow" />
+            {submitError && (
+              <p className="qty-error" role="alert">
+                {submitError}
+              </p>
+            )}
+            <button className="button dark-button" type="submit" disabled={busy}>
+              {busy ? "Sending order…" : "Place order"} <Icon name="arrow" />
             </button>
           </form>
         </aside>
